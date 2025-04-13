@@ -10,124 +10,47 @@ interface MessagesListProps {
   createMessagePreview?: (message: Message) => string;
 }
 
-// Component for message preview - supports both standard text and structured metrics display
+// Component for message preview - simplified to only handle string content
 const StaticPreview: React.FC<{ 
-  content: string | { metrics: Array<{label: string, value: string, expected: string, emoji?: string}> }; 
+  content: string; 
   multiline?: boolean;
-  isMetrics?: boolean;
-}> = ({ content, multiline = false, isMetrics = false }) => {
-  // Debug: Log the content structure
-  console.log('StaticPreview content:', content);
-  // If it's metrics data, render a structured layout
-  if (isMetrics && typeof content !== 'string') {
-    return (
-      <div 
-        style={{
-          backgroundColor: '#f0f9ff', // Light blue background
-          border: '1px solid #bfdbfe', // Light blue border
-          borderRadius: '4px',
-          padding: '6px 10px',
-          margin: '4px 0',
-          overflow: 'hidden'
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
-          {/* Only render if we have at least one populated metric */}
-          {content.metrics.some(metric => metric.value !== 'N/A' && metric.expected !== 'N/A') ? (
-            <>
-              {/* Current Quarter Section */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center'}}>
-                <div style={{ fontWeight: '600', color: '#2563eb', fontSize: '0.6rem', marginRight: '4px' }}>Current Quarter:</div>
-                {content.metrics.slice(0, 2)
-                  .filter(metric => metric.value !== 'N/A' && metric.expected !== 'N/A') // Only show populated metrics
-                  .map((metric, index) => (
-                    <div key={index} style={{ 
-                      backgroundColor: 'transparent',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      <div style={{ fontWeight: '500', fontSize: '0.6rem', color: '#64748b'}}>{metric.label}:</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.6rem' }}>{metric.value}</span>
-                        <span style={{ color: '#64748b', fontSize: '0.6rem' }}>vs</span>
-                        <span style={{ color: '#64748b', fontSize: '0.6rem' }}>{metric.expected}</span>
-                        {metric.emoji && <span style={{ marginLeft: '2px', fontSize: '0.6rem' }}>{metric.emoji}</span>}
-                      </div>
-                    </div>
-                  ))
-                }
-              </div>
-              
-              {/* Next Quarter Section - Only show if there are populated metrics */}
-              {content.metrics.slice(2, 4).some(metric => metric.value !== 'N/A' && metric.expected !== 'N/A') && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                  <div style={{ fontWeight: '600', color: '#2563eb', fontSize: '0.6rem', marginRight: '4px' }}>Next Quarter:</div>
-                    {content.metrics.slice(2, 4)
-                      .filter(metric => metric.value !== 'N/A' && metric.expected !== 'N/A') // Only show populated metrics
-                      .map((metric, index) => (
-                        <div key={index} style={{ 
-                          backgroundColor: 'transparent',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <div style={{ fontWeight: '500', fontSize: '0.6rem', color: '#64748b' }}>{metric.label}:</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.6rem' }}>{metric.value}</span>
-                            <span style={{ color: '#64748b', fontSize: '0.6rem' }}>vs</span>
-                            <span style={{ color: '#64748b', fontSize: '0.6rem' }}>{metric.expected}</span>
-                            {metric.emoji && <span style={{ marginLeft: '2px', fontSize: '0.6rem' }}>{metric.emoji}</span>}
-                          </div>
-                        </div>
-                      ))
-                    }
-                </div>
-              )}
-              
-              {/* Current Year Section - Only show if there are populated metrics */}
-              {content.metrics.slice(4).some(metric => metric.value !== 'N/A' && metric.expected !== 'N/A') && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center'}}>
-                  <div style={{ fontWeight: '600', color: '#2563eb', fontSize: '0.6rem', marginRight: '4px' }}>Fiscal Year:</div>
-                    {content.metrics.slice(4)
-                      .filter(metric => metric.value !== 'N/A' && metric.expected !== 'N/A') // Only show populated metrics
-                      .map((metric, index) => (
-                        <div key={index} style={{ 
-                          backgroundColor: 'transparent',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <div style={{ fontWeight: '500', fontSize: '0.6rem', color: '#64748b' }}>{metric.label}:</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.6rem' }}>{metric.value}</span>
-                            <span style={{ color: '#64748b', fontSize: '0.6rem' }}>vs</span>
-                            <span style={{ color: '#64748b', fontSize: '0.6rem' }}>{metric.expected}</span>
-                            {metric.emoji && <span style={{ marginLeft: '2px', fontSize: '0.6rem' }}>{metric.emoji}</span>}
-                          </div>
-                        </div>
-                      ))
-                    }
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{ padding: '4px', color: '#64748b', fontSize: '0.6rem', textAlign: 'center' }}>
-              No metrics available
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+}> = ({ content, multiline = true }) => {
+  // Filter content for preview - exclude N/A metrics and Company Highlights section
+  const filterContent = () => {
+    if (!multiline || !content.includes('\n')) {
+      return content;
+    }
+    
+    // Split content into sections (separated by double newlines)
+    const sections = content.split('\n\n');
+    const filteredSections = sections
+      // First filter out any Company Highlights sections
+      .filter(section => !section.startsWith('Company Highlights'))
+      .map(section => {
+        const lines = section.split('\n');
+        
+        // First line is usually a header
+        const header = lines[0];
+        
+        // Filter out lines with N/A
+        const filteredLines = lines.slice(1).filter(line => !line.includes('N/A'));
+        
+        // Only include section if it has at least one valid metric
+        return filteredLines.length > 0 ? [header, ...filteredLines].join('\n') : '';
+      })
+      .filter(Boolean); // Remove empty sections
+    
+    return filteredSections.join('\n\n');
+  };
   
-  // Standard text preview
+  const filteredContent = filterContent();
+  
+  // If all lines were filtered out, show a message
+  const displayContent = filteredContent.trim() === '' 
+    ? 'No metrics available with actual values.' 
+    : filteredContent;
+  
+  // Render with column layout for multiline content
   return (
     <div 
       style={{
@@ -136,26 +59,27 @@ const StaticPreview: React.FC<{
         borderRadius: '4px',
         padding: '6px 10px',
         margin: '4px 0',
-        minHeight: '24px', // Reduced minimum height
-        maxHeight: multiline ? '100px' : '24px', // Reduced maximum height
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'flex-start' // Align to top for multiline
+        minHeight: '24px',
+        maxHeight: multiline ? '100px' : '24px',
+        overflow: 'auto'
       }}
     >
       <div
         style={{
           color: '#1e40af', // Darker blue text
           fontWeight: '500',
-          fontSize: '0.6rem', // Further reduced font size for better compactness
+          fontSize: '0.6rem',
           lineHeight: '1.4',
           width: '100%',
-          whiteSpace: multiline ? 'pre-wrap' : 'nowrap', // Allow wrapping for multiline
-          overflow: 'hidden',
-          textOverflow: multiline ? 'clip' : 'ellipsis' // Add ellipsis for single line only
+          // Apply column layout for multiline content with sections
+          columnCount: multiline && displayContent.includes('\n\n') ? 2 : 1,
+          columnGap: '12px',
+          columnRule: '1px solid #e5e7eb',
+          whiteSpace: 'pre-wrap',
+          overflow: 'hidden'
         }}
       >
-        {typeof content === 'string' ? content : ''}
+        {displayContent}
       </div>
     </div>
   );
@@ -241,245 +165,41 @@ const MessagesList: React.FC<MessagesListProps> = ({
     
     setDeduplicatedMessages(deduplicated);
   }, [messages]);
-  // Define a type for metric items to ensure consistency
-  type MetricItem = {
-    label: string;
-    value: string;
-    expected: string;
-    emoji: string;
-  };
-
   // Helper function to create a preview of the message content
   const createMessagePreview = (message: Message): { 
-    content: string | { metrics: Array<MetricItem> }; 
+    content: string; 
     multiline: boolean;
-    isMetrics: boolean;
   } => {
     // Use external preview function if provided
     if (externalCreateMessagePreview) {
-      return { content: externalCreateMessagePreview(message), multiline: false, isMetrics: false };
+      return { content: externalCreateMessagePreview(message), multiline: false };
     }
     
     // If EPSComparison is available, use that for the preview
     if (message.EPSComparison) {
-      return { content: message.EPSComparison, multiline: false, isMetrics: false };
+      return { content: message.EPSComparison, multiline: false };
     }
     
     // Otherwise fall back to discord_message
-    if (!message.discord_message) return { content: '', multiline: false, isMetrics: false };
+    if (!message.discord_message) return { content: '', multiline: false };
     
     // Check if discord_message is a JSON string
     try {
       // Try to parse as JSON
       const jsonData = JSON.parse(message.discord_message);
       
-      // Check if it has the specific earnings data format we're looking for
-      if (jsonData.current_quarter_vs_expected && jsonData.next_quarter_vs_expected) {
-        // Handle both formats - the new format with string values and the old format with object values
-        let metricsData;
-        
-        // Check if we have the new format (string values)
-        if (typeof jsonData.current_quarter_vs_expected.sales === 'string') {
-          // Extract values from formatted strings
-          // Define the return type for extractValues to ensure consistency
-          type MetricValues = {
-            value: string;
-            expected: string;
-            emoji: string;
-          };
-          
-          const extractValues = (str: string): MetricValues => {
-            // Default values if parsing fails
-            const defaultValues = { value: 'N/A', expected: 'N/A', emoji: '' };
-            
-            if (!str) return defaultValues;
-            
-            // Find the last occurrence of 'vs' in the string
-            const vsIndex = str.lastIndexOf(' vs ');
-            if (vsIndex === -1) return defaultValues;
-            
-            // Split the string at the 'vs' to get the value and expected parts
-            const valuePart = str.substring(0, vsIndex).trim();
-            const expectedPart = str.substring(vsIndex + 4).trim(); // +4 to skip ' vs '
-            
-            // Extract the value (last word before 'vs')
-            const valueWords = valuePart.split(' ');
-            const value = valueWords[valueWords.length - 1];
-            
-            // Extract expected value and emoji
-            let expected = expectedPart;
-            let emoji = '';
-            
-            // Check for emoji at the end (last two characters)
-            const lastTwoChars = expectedPart.slice(-2);
-            // Simple check if the last character is not alphanumeric or parenthesis
-            if (lastTwoChars && !lastTwoChars.match(/[a-zA-Z0-9()]/)) {
-              emoji = lastTwoChars;
-              expected = expectedPart.slice(0, -2).trim();
-            }
-            
-            // Remove '(Expected)' text if present
-            const expectedIndex = expected.indexOf('(Expected)');
-            if (expectedIndex !== -1) {
-              expected = expected.substring(0, expectedIndex).trim();
-            }
-            
-            return {
-              value: value === 'N/A' ? 'N/A' : value,
-              expected: expected === 'N/A' ? 'N/A' : expected,
-              emoji: emoji
-            };
-          };
-          
-          // Parse the string values to extract the actual numbers
-          const currentSalesValues = extractValues(jsonData.current_quarter_vs_expected.sales);
-          const currentEPSValues = extractValues(jsonData.current_quarter_vs_expected.eps);
-          const nextSalesValues = extractValues(jsonData.next_quarter_vs_expected.sales);
-          const nextEPSValues = extractValues(jsonData.next_quarter_vs_expected.eps);
-          
-          // Initialize metrics array with current and next quarter data
-          const metrics: MetricItem[] = [
-            {
-              label: 'Sales',
-              value: currentSalesValues.value,
-              expected: currentSalesValues.expected,
-              emoji: currentSalesValues.emoji
-            },
-            {
-              label: 'EPS',
-              value: currentEPSValues.value,
-              expected: currentEPSValues.expected,
-              emoji: currentEPSValues.emoji
-            },
-            {
-              label: 'Sales',
-              value: nextSalesValues.value,
-              expected: nextSalesValues.expected,
-              emoji: nextSalesValues.emoji
-            },
-            {
-              label: 'EPS',
-              value: nextEPSValues.value,
-              expected: nextEPSValues.expected,
-              emoji: nextEPSValues.emoji
-            }
-          ];
-          
-          // Add current year metrics if available
-          if (jsonData.current_year_vs_expected) {
-            const currentYearSalesValues = jsonData.current_year_vs_expected.sales ? 
-              extractValues(jsonData.current_year_vs_expected.sales) : 
-              { value: 'N/A', expected: 'N/A', emoji: '' };
-              
-            const currentYearEPSValues = jsonData.current_year_vs_expected.eps ? 
-              extractValues(jsonData.current_year_vs_expected.eps) : 
-              { value: 'N/A', expected: 'N/A', emoji: '' };
-            
-            // Add current year metrics to the array
-            metrics.push(
-              {
-                label: 'FY Sales',
-                value: currentYearSalesValues.value,
-                expected: currentYearSalesValues.expected,
-                emoji: currentYearSalesValues.emoji
-              },
-              {
-                label: 'FY EPS',
-                value: currentYearEPSValues.value,
-                expected: currentYearEPSValues.expected,
-                emoji: currentYearEPSValues.emoji
-              }
-            );
-          }
-          
-          // Format the data as structured metrics
-          metricsData = { metrics };
-        } else {
-          // Original format with nested objects
-          const currentSales = jsonData.current_quarter_vs_expected.sales || {};
-          const currentEPS = jsonData.current_quarter_vs_expected.eps || {};
-          const nextSales = jsonData.next_quarter_vs_expected.sales || {};
-          const nextEPS = jsonData.next_quarter_vs_expected.eps || {};
-          
-          // Initialize metrics array with current and next quarter data
-          // Create metrics array with the consistent type
-          const metrics: MetricItem[] = [
-            {
-              label: 'Sales',
-              value: currentSales.actual || 'N/A',
-              expected: currentSales.expected || 'N/A',
-              emoji: ''
-            },
-            {
-              label: 'EPS',
-              value: currentEPS.actual || 'N/A',
-              expected: currentEPS.expected || 'N/A',
-              emoji: ''
-            },
-            {
-              label: 'Sales',
-              value: nextSales.guidance || 'N/A',
-              expected: nextSales.expected || 'N/A',
-              emoji: ''
-            },
-            {
-              label: 'EPS',
-              value: nextEPS.guidance || 'N/A',
-              expected: nextEPS.expected || 'N/A',
-              emoji: ''
-            }
-          ];
-          
-          // Add current year metrics if available
-          if (jsonData.current_year_vs_expected) {
-            const currentYearSales = jsonData.current_year_vs_expected.sales || {};
-            const currentYearEPS = jsonData.current_year_vs_expected.eps || {};
-            
-            // Add current year metrics to the array
-            metrics.push(
-              {
-                label: 'FY Sales',
-                value: currentYearSales.actual || 'N/A',
-                expected: currentYearSales.expected || 'N/A',
-                emoji: ''
-              },
-              {
-                label: 'FY EPS',
-                value: currentYearEPS.actual || 'N/A',
-                expected: currentYearEPS.expected || 'N/A',
-                emoji: ''
-              }
-            );
-          }
-          
-          metricsData = { metrics };
-        }
-        
-        return { content: metricsData, multiline: true, isMetrics: true };
-      }
-      
-      // If it has a message property but not the specific format, return just that part
+      // For any JSON data with a message property, use that directly
       if (jsonData.message) {
-        return { content: jsonData.message, multiline: false, isMetrics: false };
+        // This is the primary path we expect - using the pre-formatted message
+        return { content: jsonData.message, multiline: true };
       }
     } catch {
-      // Not JSON, continue with regular text processing
+      // Not JSON, just use the raw message
     }
     
-    // Remove any markdown formatting
-    const plainText = message.discord_message
-      .replace(/\*\*/g, '') // Remove bold
-      .replace(/\*/g, '')   // Remove italic
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/`.*?`/g, '') // Remove inline code
-      .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
-      .replace(/#/g, '') // Remove headings
-      .replace(/\n/g, ' ') // Replace newlines with spaces
-      .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
-      .trim();
-    
-    // For static preview, we want to show as much content as possible
-    return { content: plainText, multiline: false, isMetrics: false };
+    // If we couldn't parse as JSON or it didn't have the message property,
+    // just return the raw message content
+    return { content: message.discord_message, multiline: true };
   };
 
   // Set initial messages after first load
@@ -633,7 +353,6 @@ const MessagesList: React.FC<MessagesListProps> = ({
                 <StaticPreview 
                   content={createMessagePreview(message).content} 
                   multiline={createMessagePreview(message).multiline}
-                  isMetrics={createMessagePreview(message).isMetrics}
                 />
               )}
             </div>
