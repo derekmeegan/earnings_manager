@@ -101,33 +101,40 @@ const MessagesList: React.FC<MessagesListProps> = ({
       return;
     }
 
-    // Create a map to track the first message for each ticker
-    const tickerMessageMap = new Map<string, Message>();
+    // Create separate maps for link and analysis messages
+    const linkMessagesMap = new Map<string, Message>();
+    const analysisMessagesMap = new Map<string, Message>();
     
-    // Sort messages by timestamp (newest first) before deduplication
+    // Sort messages by timestamp (oldest first) to prioritize speed
     const sortedMessages = [...messages].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
     sortedMessages.forEach(message => {
-      
       const key = message.ticker + message.quarter + message.year;
-      const existingMessage = tickerMessageMap.get(key);
+      const hasLink = !!message.link;
       
-      if (!existingMessage) {
-        tickerMessageMap.set(key, message);
-      } 
-      else {
-        const hasLink = !!message.link;
-        const existingHasLink = !!existingMessage.link;
-        
-        if (hasLink !== existingHasLink) {
-          tickerMessageMap.set(`${key}-${hasLink ? 'link' : 'data'}`, message);
+      if (hasLink) {
+        // This is a link message
+        if (!linkMessagesMap.has(key)) {
+          linkMessagesMap.set(key, message);
+        }
+      } else {
+        // This is an analysis message
+        if (!analysisMessagesMap.has(key)) {
+          analysisMessagesMap.set(key, message);
         }
       }
     });
     
-    const deduplicated = Array.from(tickerMessageMap.values()).sort(
+    // Combine both types of messages
+    const combinedMessages = [
+      ...Array.from(linkMessagesMap.values()),
+      ...Array.from(analysisMessagesMap.values())
+    ];
+    
+    // Sort final results by timestamp (newest first for display)
+    const deduplicated = combinedMessages.sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
     
